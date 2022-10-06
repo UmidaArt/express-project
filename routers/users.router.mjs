@@ -4,7 +4,7 @@ const router = express.Router()
 
 router.get('/', getUsersList)
 
-router.get('/:slug', getOneUser)
+router.get('/:id', getOneUser)
 
 router.post('/', postUser)
 

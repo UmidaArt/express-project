@@ -1,47 +1,60 @@
-import fs from 'fs'
+import {User} from '../models/user.model.js'
 
-const getUsersList = (req, res) => {
-    const users = fs.readFileSync('./data.json', {encoding: 'utf-8'})
-    const parsedUsers = JSON.parse(users)
-    res.json(parsedUsers)
+const getUsersList = async (req, res) => {
+    try {
+        const users = await User.find({}).populate('name')
+        res.json(users)
+    } catch (e) {
+        res.status(400).json({message: e.message})
+    }
 }
 
-const getOneUser = (req, res) => {
-    const users = fs.readFileSync('./data.json', {encoding: 'utf-8'})
-    const parsedUsers = JSON.parse(users)
-    const user = parsedUsers.find(user => user.id === +req.params.slug)
-    if (!user) res.status(404).send('not found')
-    res.json(user)
+const getOneUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id)
+        res.json(user)
+    } catch (e) {
+        res.status(400).json({message: e.message})
+    }
 }
 
 const postUser = async (req, res) => {
-    const users = fs.readFileSync('./data.json')
-    const updateUsers = [...JSON.parse(users), req.body]
-    await fs.writeFileSync('./data.json', JSON.stringify(updateUsers, null, 2))
-    res.json({status: 'ok'})
+    try {
+        const newUser = new User(req.body)
+        const insertUser = await newUser.save()
+        res.json(insertUser)
+    } catch (e) {
+        res.status(400).json({message: e.message})
+    }
 }
 
 const deleteAllUsers = async (req, res) => {
-    console.log(req.body)
-    res.send('[]')
-    await fs.writeFileSync('./data.json', JSON.stringify([]))
+    try {
+        const deleteUser = await User.deleteMany()
+        res.send(deleteUser)
+    } catch (e) {
+        res.status(400).json({message: e.message})
+    }
 }
 
 const deleteOneUser = async (req, res) => {
-    const users = fs.readFileSync('./data.json', {encoding: 'utf-8'})
-    const parsedUsers = JSON.parse(users)
-    const user = parsedUsers.filter((user) => user.id !== +req.params.id);
-    await fs.writeFileSync('./data.json', JSON.stringify(user, null, 2))
-    res.json({message:' delete'})
-    if (!user) res.status(404).send('not found')
+    try {
+        const user = await User.findByIdAndDelete(req.params.id)
+        res.json(user)
+    } catch (e) {
+        res.status(400).json({message: e.message})
+    }
 }
 
 const editUser = async (req, res) => {
-    const users = fs.readFileSync('./data.json', {encoding: 'utf-8'})
-    const parsedUsers = JSON.parse(users)
-    const editUser = parsedUsers.map((item) => item.id === +req.params.id ? {...item, ...req.body} : item)
-    await fs.writeFileSync('./data.json', JSON.stringify(editUser, null, 2))
-    res.json(req.body);
+    try {
+        const user = await User.findByIdAndUpdate(req.params.id, {...req.body},{
+            returnOriginal: false
+        })
+        res.json(user);
+    } catch (e) {
+        res.status(400).json({message: e.message})
+    }
 }
 
 export {getUsersList, getOneUser, postUser, deleteAllUsers, deleteOneUser, editUser}
